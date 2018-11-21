@@ -1,51 +1,57 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Nov  7 19:19:25 2018
+
+@author: Mill
+"""
+
+import pandas as pd
 import numpy as np
-def inputprocess(s:str):
-    global t,out
-    t =[]
-    out = []
-    t = s.split()
-    for i in range(len(t)):
-        out.append(float(t[i]))
-    return  
-def is_warp():
-    global mat_star
-    bool = True
-    for i in range(info):
-        for j in range(info):
-            if mat_star[i,j] == 1 and mat_star[j,i] == 1:
-                bool = False
-                break
-            else:
-                pass
-    return bool
+from matplotlib import pyplot as plt
 
-try:
-    info = int(input('请输入数据组数：'))
-except:
-    print('给我一个正常的整数嘛~')
-    print('不理你了 哼！')
 
-p = np.zeros((info,2))
-c = np.zeros((2,info))
-for row in range(info):
-    p[row][0]=float(input('输入第'+str(row+1)+'次消费(用空格或逗号隔开)(p1,p2) = '))
-    p[row][1]=float(input('输入第'+str(row+1)+'次消费(用空格或逗号隔开)(p1,p2) = '))
-    c[0][row]=float(input('输入第'+str(row+1)+'次价格(用空格或逗号隔开)(x1,x2) = '))
-    c[1][row]=float(input('输入第'+str(row+1)+'次价格(用空格或逗号隔开)(x1,x2) = '))
-mat_m = p.dot(c)
-print('数据表如下')
-print(mat_m)
-mat_star = np.zeros(np.shape(mat_m))
-for i in range(info):
-    for j in range(info):
-        if mat_m[i][j]<mat_m[i][i]:
-            mat_star[i][j] = 1
-print('---------------------------')
-print('是否\'*\'如下(1代表打星号)')
+def data_collect(): #输入数据
+    dim = int(input('请输入有几组数据：'))   
+    data = np.full([dim*2,3], np.nan) 
+    df=pd.DataFrame(data,columns=['price','amount','budget'])
 
-if is_warp():
-    print(mat_star)
-    print('Yes.')
-else:
-    print(mat_star)
-    print('Hell no!')
+    for i in range(dim):
+        df.iloc[i*2]['price'] =float((input('请输入第%d组第一个商品价格：'%(i+1))))
+        df.iloc[i*2]['amount']=float((input('请输入第%d组第一个商品数量：'%(i+1))))
+        df.iloc[i*2+1]['price'] =float((input('请输入第%d组第二个商品价格：'%(i+1))))
+        df.iloc[i*2+1]['amount']=float((input('请输入第%d组第二个商品数量：'%(i+1))))
+        df.iloc[i*2+1]['budget']=df.iloc[i*2]['price']*df.iloc[i*2]['amount']+df.iloc[i*2+1]['price']*df.iloc[i*2+1]['amount']
+    print(df)
+    return df
+
+def warp_plot(df):
+    pass
+    
+def is_warp(df): #判断是否违背warp
+    signal = None
+    for i in range(int(len(df)/2)):
+        for j in range(int(len(df)/2)):
+            #budget1_1 第一组商品的预算 budget1_2 用第一组商品价格乘以第二组商品数量 budget2_1 用第二组商品价格乘以第一组商品数量 budget2_2 第二组商品的预算
+            budget1_1=df.iloc[i*2]['price']*df.iloc[i*2]['amount']+df.iloc[i*2+1]['price']*df.iloc[i*2+1]['amount']
+            budget1_2=df.iloc[i*2]['price']*df.iloc[j*2]['amount']+df.iloc[i*2+1]['price']*df.iloc[j*2+1]['amount']
+            budget2_1=df.iloc[j*2]['price']*df.iloc[i*2]['amount']+df.iloc[j*2+1]['price']*df.iloc[i*2+1]['amount']
+            budget2_2=df.iloc[j*2]['price']*df.iloc[j*2]['amount']+df.iloc[j*2+1]['price']*df.iloc[j*2+1]['amount']
+            #若在购买消费束x的时候，有能力购买消费束y,那么在购买消费束y的时候，x的消费束一定在购买力之外
+            if budget1_1>budget1_2: 
+                if budget2_2>budget2_1:
+                    print('False')
+                    signal = False
+            elif budget1_1<budget1_2:
+                if budget2_2<budget2_1:
+                    print('False')
+                    signal = False
+    print('True')
+    signal = True
+    
+    return signal
+    
+    
+    
+if __name__=='__main__':
+    df=data_collect()
+    is_warp(df)
